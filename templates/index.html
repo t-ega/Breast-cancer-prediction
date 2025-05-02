@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Breast Cancer Prediction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .input-field {
+        transition: all 0.3s ease;
+      }
+      .input-field:focus {
+        transform: scale(1.02);
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+      }
+      .submit-btn {
+        transition: all 0.3s ease;
+      }
+      .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+      }
+      .result-box {
+        transition: opacity 0.5s ease;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-6"
+  >
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8">
+      <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">
+        Breast Cancer Prediction
+      </h1>
+      <form id="predictForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Patient Name -->
+        <div class="col-span-1 md:col-span-2">
+          <label
+            for="patient_name"
+            class="block text-sm font-medium text-gray-700 mb-1"
+            >Patient Name</label
+          >
+          <input
+            type="text"
+            id="patient_name"
+            name="patient_name"
+            class="input-field w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter patient's name"
+            required
+          />
+        </div>
+        <!-- Dynamically populated fields -->
+      </form>
+      <div
+        id="result"
+        class="result-box mt-6 text-center text-lg font-semibold text-gray-800 opacity-0"
+      ></div>
+    </div>
+
+    <script>
+      const topFeatures = [
+        "worst perimeter",
+        "worst concave points",
+        "worst area",
+        "mean concave points",
+        "worst radius",
+        "mean area",
+        "area error",
+        "mean concavity",
+        "worst concavity",
+        "mean radius",
+      ];
+
+      const form = document.getElementById("predictForm");
+
+      // Create form inputs
+      topFeatures.forEach((feature) => {
+        const div = document.createElement("div");
+        const label = document.createElement("label");
+        label.htmlFor = feature;
+        label.innerText = feature;
+        label.className = "block text-sm font-medium text-gray-700 mb-1";
+
+        const input = document.createElement("input");
+        input.type = "number";
+        input.step = "any";
+        input.id = feature;
+        input.name = feature;
+        input.className =
+          "input-field w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500";
+        input.placeholder = `Enter ${feature}`;
+        input.required = true;
+
+        div.appendChild(label);
+        div.appendChild(input);
+        form.appendChild(div);
+      });
+
+      // Submit button
+      const button = document.createElement("button");
+      button.type = "submit";
+      button.innerText = "Predict";
+      button.className =
+        "submit-btn col-span-1 md:col-span-2 mt-4 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500";
+      form.appendChild(button);
+
+      // Handle submission
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const data = {};
+        for (let [key, value] of formData.entries()) {
+          data[key] = key === "patient_name" ? value : parseFloat(value);
+        }
+
+        try {
+          const response = await fetch("/predict", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+          const resultDiv = document.getElementById("result");
+          resultDiv.innerText = result.prediction
+            ? `Prediction for ${data.patient_name}: ${result.prediction}`
+            : `Error: ${result.error}`;
+          resultDiv.classList.remove("opacity-0");
+          resultDiv.classList.add("opacity-100");
+        } catch (error) {
+          const resultDiv = document.getElementById("result");
+          resultDiv.innerText = `Error: Failed to fetch prediction`;
+          resultDiv.classList.remove("opacity-0");
+          resultDiv.classList.add("opacity-100");
+        }
+      });
+    </script>
+  </body>
+</html>
