@@ -5,6 +5,7 @@ import pandas as pd
 import sqlite3
 from datetime import datetime
 from create_sqlite_db import create_db
+import os
 
 app = Flask(__name__)
 
@@ -73,5 +74,5 @@ def home():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    create_db()
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=True, host='0.0.0.0', port=port)
